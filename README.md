@@ -1,6 +1,5 @@
-<p align="center">
-  <em>States and Disturbance Observers Branch</em>
-</p>
+## States and Disturbance Observers Branch
+In this branch ...
 
 <p align="center">
   <a href="https://px4.io">
