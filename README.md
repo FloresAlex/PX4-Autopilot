@@ -1,4 +1,8 @@
 <p align="center">
+  <em>States and Disturbance Observers Branch</em>
+</p>
+
+<p align="center">
   <a href="https://px4.io">
     <img src="docs/assets/site/px4_logo.svg" alt="PX4 Autopilot" width="240">
   </a>
