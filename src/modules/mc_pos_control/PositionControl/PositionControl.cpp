@@ -104,8 +104,8 @@ void PositionControl::setInputSetpoint(const trajectory_setpoint_s &setpoint)
 	_pos_sp = Vector3f(setpoint.position);
 	_vel_sp = Vector3f(setpoint.velocity);
 	_acc_sp = Vector3f(setpoint.acceleration);
-	_yaw_sp = setpoint.yaw;
-	_yawspeed_sp = setpoint.yawspeed;
+	_yaw_sp = 0.f; //setpoint.yaw;
+	_yawspeed_sp = 0.f; //setpoint.yawspeed;
 }
 
 bool PositionControl::update(const float dt)
@@ -119,6 +119,73 @@ bool PositionControl::update(const float dt)
 		_yawspeed_sp = PX4_ISFINITE(_yawspeed_sp) ? _yawspeed_sp : 0.f;
 		_yaw_sp = PX4_ISFINITE(_yaw_sp) ? _yaw_sp : _yaw; // TODO: better way to disable yaw control
 	}
+
+
+	///////////////////////////////////////////////////////////////
+	////////////////// position observer //////////////////////////
+	///////////////////////////////////////////////////////////////
+
+
+	// Equation 40
+	Vector3f e_p = _pos_sp - _pos;
+	Vector3f e_v = _vel_sp - _vel;
+
+	// Equation 42 without F disturbance used for position state observer
+	Vector3f fRe_3 = _m * (Vector3f(0.0f, 0.0f, CONSTANTS_ONE_G) + e_v.emult(_K_d) + e_p.emult(_K_p) - _acc_sp);
+	if (!PX4_ISFINITE(fRe_3(0))) {
+		fRe_3 = Vector3f(0.f, 0.f, 0.f);
+	}
+
+
+	Vector3f v_hat_dot = Vector3f(0.f, 0.f, 0.f);
+	Vector3f F_hat_dot = Vector3f(0.f, 0.f, 0.f);
+	Vector3f v_tilde = _v_hat - _vel; // equation 27
+	Vector3f F_tilde = Vector3f(0.f, 0.f, 0.f);
+
+
+	// Only apply observer when the drone is flying
+	if(_pos(2) < -2.0f){
+		_tiempo_transcurrido += dt;
+		//////////////////////////////
+		// Simulation of disturbance F after 5 second of takeoff
+		if(_tiempo_transcurrido > 20.f && _tiempo_transcurrido < 40.f){
+			_F = Vector3f{0.3f * sinf((_tiempo_transcurrido-20.f) * 0.7f),
+			      	      0.4f * sinf((_tiempo_transcurrido-20.f) * 1.0f),
+			              0.2f * sinf((_tiempo_transcurrido-20.f) * 0.3f)} ;
+			//_F = Vector3f{0.3f * sign(sinf(_tiempo_transcurrido * 1.f)), 0.f, 0.f} ;
+		}
+		else{
+			_F = Vector3f{0.f, 0.f, 0.f} ;
+		}
+
+		//////////////////////////////
+		// equation 25 ....
+		// In the control term we can put PX4 control equation or ours
+		// The PX4 control law works better for position observer
+		v_hat_dot = Vector3f(0.0f, 0.0f, CONSTANTS_ONE_G) + _thr_sp_no/_m + _F_hat - v_tilde.emult(_K_v);
+		// integration
+		_v_hat += v_hat_dot * dt;
+
+
+		// equation 26 Disturbance F observer
+		F_hat_dot = -v_tilde.emult(_L3) - _F_hat.emult(_L4);
+		// integration
+		_F_hat += F_hat_dot * dt;
+
+		F_tilde = _F_hat - _F;
+
+	}
+
+
+
+
+	strncpy(_debug_vector.name, "_F_hat", 10);
+	_debug_vector.x = _F_hat(0);
+	_debug_vector.y = _F_hat(1);
+	_debug_vector.z = _F_hat(2);
+	orb_publish(ORB_ID(debug_vect), pub_dbg_vect, &_debug_vector);
+
+
 
 	// There has to be a valid output acceleration and thrust setpoint otherwise something went wrong
 	return valid && _acc_sp.isAllFinite() && _thr_sp.isAllFinite();
@@ -222,6 +289,22 @@ void PositionControl::_accelerationControl()
 	const float cos_ned_body = (Vector3f(0, 0, 1).dot(body_z));
 	const float collective_thrust = math::min(thrust_ned_z / cos_ned_body, -_lim_thr_min);
 	_thr_sp = body_z * collective_thrust;
+
+	// create a non modified control to use it in the state observer
+	_thr_sp_no = _thr_sp;
+
+	// apply a simulated force disturbance _F is modified while drone is flying
+	_thr_sp(0) += _F(0);
+	_thr_sp(1) += _F(1);
+	_thr_sp(2) += _F(2);
+
+	// compensate the disturbance with the observer after x seconds of takeoff
+	/*
+	if(_tiempo_transcurrido > 10.f){
+		_thr_sp(0) -= 2.0f * _F_hat(0);
+		_thr_sp(1) -= 2.0f * _F_hat(1);
+	}
+	*/
 }
 
 bool PositionControl::_inputValid()
