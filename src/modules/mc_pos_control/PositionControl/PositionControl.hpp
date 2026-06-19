@@ -237,17 +237,15 @@ private:
 	float _yawspeed_sp{}; /** desired yaw-speed */
 
 	struct debug_vect_s _debug_vector{};
-	const float _m = 1.0f;
+	const float _m = 0.07f;
 	const matrix::Vector3f _K_p{1.0f, 1.0f, 1.0f};
 	const matrix::Vector3f _K_d{0.1f, 0.1f, 0.1f};
-	const matrix::Vector3f _K_v{20.0f, 20.0f, 5.0f};
-	const matrix::Vector3f _L3{2.7f, 2.7f, 1.0f};
-	const matrix::Vector3f _L4{0.002f, 0.002f, 1.0f};
+	const matrix::Vector3f _K_v{1.0f, 1.0f, 1.0f};
+	const matrix::Vector3f _L3{30.0f, 30.0f, 20.0f};
+	const matrix::Vector3f _L4{10.0f, 10.0f, 8.0f};
 
 	float _tiempo_transcurrido = 0.f;
 
-	matrix::Vector3f _F{0.0f, 0.0f, 0.0f};
-	matrix::Vector3f _thr_sp_no{0.0f, 0.0f, 0.0f};
 	matrix::Vector3f _v_hat{0.0f, 0.0f, 0.0f};
 	matrix::Vector3f _F_hat{0.0f, 0.0f, 0.0f};
 	orb_advert_t pub_dbg_vect = orb_advertise(ORB_ID(debug_vect), &_debug_vector);
