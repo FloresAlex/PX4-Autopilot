@@ -168,10 +168,19 @@ bool PositionControl::update(const float dt)
 
 	strncpy(_debug_vector.name, "_F_hat", 10);
 	_debug_vector.x = _vel(0);
-	_debug_vector.y = _v_hat(0);
-	_debug_vector.z = _F_hat(0);
+	_debug_vector.y = _F_hat(0);
+	_debug_vector.z = _F_hat(1);
 	orb_publish(ORB_ID(debug_vect), pub_dbg_vect, &_debug_vector);
 
+
+	strncpy(_debug_array.name, "variables", 10);
+	_debug_array.data[0] = _v_hat(0);
+	_debug_array.data[1] = _v_hat(1);
+	_debug_array.data[2] = _v_hat(2);
+	_debug_array.data[3] = _F_hat(0);
+	_debug_array.data[4] = _F_hat(1);
+	_debug_array.data[5] = _F_hat(2);
+	orb_publish(ORB_ID(debug_array), pub_dbg_array, &_debug_array);
 
 
 	// There has to be a valid output acceleration and thrust setpoint otherwise something went wrong
@@ -281,8 +290,8 @@ void PositionControl::_accelerationControl()
 	// compensate the disturbance with the observer after x seconds of takeoff
 
 	if(_tiempo_transcurrido > 10.f){
-		_thr_sp(0) -= 0.02f * _F_hat(0);
-		_thr_sp(1) -= 0.02f * _F_hat(1);
+		_thr_sp(0) -= 0.005f * _F_hat(0);
+		_thr_sp(1) -= 0.005f * _F_hat(1);
 	}
 
 }

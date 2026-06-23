@@ -46,6 +46,7 @@
 #include <uORB/topics/vehicle_local_position_setpoint.h>
 
 #include <uORB/topics/debug_vect.h>
+#include <uORB/topics/debug_array.h>
 
 struct PositionControlStates {
 	matrix::Vector3f position;
@@ -241,12 +242,16 @@ private:
 	const matrix::Vector3f _K_p{1.0f, 1.0f, 1.0f};
 	const matrix::Vector3f _K_d{0.1f, 0.1f, 0.1f};
 	const matrix::Vector3f _K_v{1.0f, 1.0f, 1.0f};
-	const matrix::Vector3f _L3{30.0f, 30.0f, 20.0f};
-	const matrix::Vector3f _L4{10.0f, 10.0f, 8.0f};
+	const matrix::Vector3f _L3{900.0f, 900.0f, 0.0f};
+	const matrix::Vector3f _L4{50.0f, 50.0f, 0.0f};
 
 	float _tiempo_transcurrido = 0.f;
 
 	matrix::Vector3f _v_hat{0.0f, 0.0f, 0.0f};
 	matrix::Vector3f _F_hat{0.0f, 0.0f, 0.0f};
 	orb_advert_t pub_dbg_vect = orb_advertise(ORB_ID(debug_vect), &_debug_vector);
+
+	// Debug array for position observer
+	struct debug_array_s _debug_array{};
+	orb_advert_t pub_dbg_array = orb_advertise(ORB_ID(debug_array), &_debug_array);
 };
