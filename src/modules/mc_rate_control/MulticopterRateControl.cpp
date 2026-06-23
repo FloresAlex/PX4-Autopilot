@@ -233,6 +233,11 @@ MulticopterRateControl::Run()
 			vehicle_torque_setpoint_s vehicle_torque_setpoint{};
 
 			_thrust_setpoint.copyTo(vehicle_thrust_setpoint.xyz);
+
+			////// disturbance compensation //////////
+			//vehicle_torque_setpoint.xyz[0] -= _T_hat(0)*0.01f;
+
+
 			vehicle_torque_setpoint.xyz[0] = PX4_ISFINITE(torque_setpoint(0)) ? torque_setpoint(0) : 0.f;
 			vehicle_torque_setpoint.xyz[1] = PX4_ISFINITE(torque_setpoint(1)) ? torque_setpoint(1) : 0.f;
 			vehicle_torque_setpoint.xyz[2] = PX4_ISFINITE(torque_setpoint(2)) ? torque_setpoint(2) : 0.f;
@@ -262,6 +267,56 @@ MulticopterRateControl::Run()
 			vehicle_torque_setpoint.timestamp_sample = angular_velocity.timestamp_sample;
 			vehicle_torque_setpoint.timestamp = hrt_absolute_time();
 			_vehicle_torque_setpoint_pub.publish(vehicle_torque_setpoint);
+
+			////////// attitude observer ////////////
+			/*
+			// Equation 40
+			Vector3f e_p = _pos_sp - _pos;
+			Vector3f e_v = _vel_sp - _vel;
+
+
+			// Equation 42 without F disturbance used for position state observer
+			Vector3f fRe_3 = _m * (Vector3f(0.0f, 0.0f, CONSTANTS_ONE_G) + e_v.emult(_K_d) + e_p.emult(_K_p) - _acc_sp);
+			if (!PX4_ISFINITE(fRe_3(0))) {
+				fRe_3 = Vector3f(0.f, 0.f, 0.f);
+			}
+			*/
+
+
+			Vector3f T_hat_dot = Vector3f(0.f, 0.f, 0.f);
+			Vector3f Omega_hat_dot = Vector3f(0.f, 0.f, 0.f);
+			Vector3f Omega_tilde = _Omega_hat - rates; // equation 9
+
+
+			// Only apply observer when the drone is flying
+			if(_vehicle_status.takeoff_time > 10000000){
+				//////////////////////////////
+				// equation 8.1 ....
+				// In the control term we can put PX4 control equation or ours
+				Vector3f tau = {vehicle_torque_setpoint.xyz[0],vehicle_torque_setpoint.xyz[1],vehicle_torque_setpoint.xyz[2]};
+				Omega_hat_dot = -(_Omega_hat.cross(_Omega_hat.emult(_J))).emult(_invJ) + tau.emult(_invJ) - Omega_tilde.emult(_K);
+				// integration
+				_Omega_hat += Omega_hat_dot * dt;
+
+
+				// equation 8.2 Disturbance T observer
+				T_hat_dot = -Omega_tilde.emult(_L1) - _T_hat.emult(_L2);
+				// integration
+				_T_hat += T_hat_dot * dt;
+
+			}
+
+
+
+
+			strncpy(_debug_vector.name, "_T_hat", 10);
+			_debug_vector.x = rates(0);
+			_debug_vector.y = _Omega_hat(0);
+			_debug_vector.z = _T_hat(0);
+			orb_publish(ORB_ID(debug_vect), pub_dbg_vect, &_debug_vector);
+
+			////////////// end obsever ////////////
+
 
 			updateActuatorControlsStatus(vehicle_torque_setpoint, dt);
 

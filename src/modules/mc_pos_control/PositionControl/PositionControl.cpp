@@ -163,14 +163,13 @@ bool PositionControl::update(const float dt)
 
 	}
 
-
-
-
+	/*
 	strncpy(_debug_vector.name, "_F_hat", 10);
 	_debug_vector.x = _vel(0);
 	_debug_vector.y = _F_hat(0);
 	_debug_vector.z = _F_hat(1);
 	orb_publish(ORB_ID(debug_vect), pub_dbg_vect, &_debug_vector);
+	*/
 
 
 	strncpy(_debug_array.name, "variables", 10);

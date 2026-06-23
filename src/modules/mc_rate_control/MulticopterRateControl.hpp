@@ -61,6 +61,8 @@
 #include <uORB/topics/vehicle_thrust_setpoint.h>
 #include <uORB/topics/vehicle_torque_setpoint.h>
 
+#include <uORB/topics/debug_vect.h>
+
 using namespace time_literals;
 
 class MulticopterRateControl : public ModuleBase, public ModuleParams, public px4::WorkItem
@@ -167,4 +169,16 @@ private:
 
 		(ParamBool<px4::params::MC_BAT_SCALE_EN>) _param_mc_bat_scale_en
 	)
+
+	const matrix::Vector3f _L1{500.0f, 0.0f, 0.0f};
+	const matrix::Vector3f _L2{10.0f, 0.0f, 0.0f};
+	const matrix::Vector3f _K{10.0f, 10.0f, 10.0f};
+
+	matrix::Vector3f _Omega_hat{0.0f, 0.0f, 0.0f};
+	matrix::Vector3f _T_hat{0.0f, 0.0f, 0.0f};
+	matrix::Vector3f _J{0.01f, 0.01f, 0.01f};
+	matrix::Vector3f _invJ{100.0f, 100.0f, 100.0f};
+
+	struct debug_vect_s _debug_vector{};
+	orb_advert_t pub_dbg_vect = orb_advertise(ORB_ID(debug_vect), &_debug_vector);
 };
