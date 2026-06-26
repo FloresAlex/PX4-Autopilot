@@ -241,7 +241,7 @@ private:
 	const float _m = 0.07f;
 	const matrix::Vector3f _K_p{1.0f, 1.0f, 1.0f};
 	const matrix::Vector3f _K_d{0.1f, 0.1f, 0.1f};
-	const matrix::Vector3f _K_v{1.0f, 1.0f, 1.0f};
+	const matrix::Vector3f _K_v{1.0f, 1.0f, 10.0f};
 	const matrix::Vector3f _L3{900.0f, 900.0f, 0.0f};
 	const matrix::Vector3f _L4{50.0f, 50.0f, 0.0f};
 
@@ -250,8 +250,10 @@ private:
 	matrix::Vector3f _v_hat{0.0f, 0.0f, 0.0f};
 	matrix::Vector3f _F_hat{0.0f, 0.0f, 0.0f};
 
-	//struct debug_vect_s _debug_vector{};
-	//orb_advert_t pub_dbg_vect = orb_advertise(ORB_ID(debug_vect), &_debug_vector);
+	/*
+	struct debug_vect_s _debug_vector{};
+	orb_advert_t pub_dbg_vect = orb_advertise(ORB_ID(debug_vect), &_debug_vector);
+	*/
 
 	// Debug array for position observer
 	struct debug_array_s _debug_array{};

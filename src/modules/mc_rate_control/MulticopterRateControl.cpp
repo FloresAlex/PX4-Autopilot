@@ -234,13 +234,13 @@ MulticopterRateControl::Run()
 
 			_thrust_setpoint.copyTo(vehicle_thrust_setpoint.xyz);
 
-			////// disturbance compensation //////////
-			//vehicle_torque_setpoint.xyz[0] -= _T_hat(0)*0.01f;
-
 
 			vehicle_torque_setpoint.xyz[0] = PX4_ISFINITE(torque_setpoint(0)) ? torque_setpoint(0) : 0.f;
 			vehicle_torque_setpoint.xyz[1] = PX4_ISFINITE(torque_setpoint(1)) ? torque_setpoint(1) : 0.f;
 			vehicle_torque_setpoint.xyz[2] = PX4_ISFINITE(torque_setpoint(2)) ? torque_setpoint(2) : 0.f;
+
+			////// disturbance compensation //////////
+			//vehicle_torque_setpoint.xyz[0] -= _T_hat(0)*0.12f;
 
 			// scale setpoints by battery status if enabled
 			if (_param_mc_bat_scale_en.get()) {
@@ -287,14 +287,26 @@ MulticopterRateControl::Run()
 			Vector3f Omega_hat_dot = Vector3f(0.f, 0.f, 0.f);
 			Vector3f Omega_tilde = _Omega_hat - rates; // equation 9
 
-
 			// Only apply observer when the drone is flying
-			if(_vehicle_status.takeoff_time > 10000000){
+			if(_vehicle_status.takeoff_time > 0){
+				_tiempo_transcurrido += dt;
+			}
+			if(_tiempo_transcurrido > 10.0f){
 				//////////////////////////////
 				// equation 8.1 ....
 				// In the control term we can put PX4 control equation or ours
 				Vector3f tau = {vehicle_torque_setpoint.xyz[0],vehicle_torque_setpoint.xyz[1],vehicle_torque_setpoint.xyz[2]};
-				Omega_hat_dot = -(_Omega_hat.cross(_Omega_hat.emult(_J))).emult(_invJ) + tau.emult(_invJ) - Omega_tilde.emult(_K);
+
+				vehicle_attitude_s vehicle_attitude;
+				_vehicle_attitude_sub.update(&vehicle_attitude);
+				matrix::Quatf q(vehicle_attitude.q);
+				matrix::Eulerf euler(q);
+
+				euler(0) = PX4_ISFINITE(euler(0)) ? euler(0) : 0.f;
+				euler(1) = PX4_ISFINITE(euler(1)) ? euler(1) : 0.f;
+				euler(2) = PX4_ISFINITE(euler(2)) ? euler(2) : 0.f;
+
+				Omega_hat_dot = -(_Omega_hat.cross(_Omega_hat.emult(_J))).emult(_invJ) + tau.emult(_invJ) - _Omega_hat.emult(Vector3f(0.13f, 0.13f, 0.13f)) - euler.emult(Vector3f(5.0f, 5.0f, 5.0f)) - Omega_tilde.emult(_K);
 				// integration
 				_Omega_hat += Omega_hat_dot * dt;
 
@@ -307,13 +319,22 @@ MulticopterRateControl::Run()
 			}
 
 
-
-
+			/*
 			strncpy(_debug_vector.name, "_T_hat", 10);
 			_debug_vector.x = rates(0);
 			_debug_vector.y = _Omega_hat(0);
 			_debug_vector.z = _T_hat(0);
 			orb_publish(ORB_ID(debug_vect), pub_dbg_vect, &_debug_vector);
+			*/
+
+			strncpy(_debug_array.name, "var_T", 10);
+			_debug_array.data[6] = _Omega_hat(0);
+			_debug_array.data[7] = _Omega_hat(1);
+			_debug_array.data[8] = _Omega_hat(2);
+			_debug_array.data[9] = _T_hat(0);
+			_debug_array.data[10] = _T_hat(1);
+			_debug_array.data[11] = _T_hat(2);
+			orb_publish(ORB_ID(debug_array), pub_dbg_array, &_debug_array);
 
 			////////////// end obsever ////////////
 

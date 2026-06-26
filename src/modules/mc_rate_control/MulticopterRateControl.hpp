@@ -61,7 +61,9 @@
 #include <uORB/topics/vehicle_thrust_setpoint.h>
 #include <uORB/topics/vehicle_torque_setpoint.h>
 
-#include <uORB/topics/debug_vect.h>
+//#include <uORB/topics/debug_vect.h>
+#include <uORB/topics/vehicle_attitude.h>
+#include <uORB/topics/debug_array.h>
 
 using namespace time_literals;
 
@@ -103,6 +105,7 @@ private:
 	uORB::Subscription _vehicle_land_detected_sub{ORB_ID(vehicle_land_detected)};
 	uORB::Subscription _vehicle_rates_setpoint_sub{ORB_ID(vehicle_rates_setpoint)};
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
+
 
 	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1_s};
 
@@ -170,15 +173,24 @@ private:
 		(ParamBool<px4::params::MC_BAT_SCALE_EN>) _param_mc_bat_scale_en
 	)
 
-	const matrix::Vector3f _L1{500.0f, 0.0f, 0.0f};
-	const matrix::Vector3f _L2{10.0f, 0.0f, 0.0f};
-	const matrix::Vector3f _K{10.0f, 10.0f, 10.0f};
+	const matrix::Vector3f _L1{5.0f, 5.0f, 5.0f};
+	const matrix::Vector3f _L2{5.0f, 5.0f, 5.0f};
+	const matrix::Vector3f _K{50.0f, 50.0f, 50.0f};
 
 	matrix::Vector3f _Omega_hat{0.0f, 0.0f, 0.0f};
 	matrix::Vector3f _T_hat{0.0f, 0.0f, 0.0f};
 	matrix::Vector3f _J{0.01f, 0.01f, 0.01f};
 	matrix::Vector3f _invJ{100.0f, 100.0f, 100.0f};
+	float _tiempo_transcurrido = 0.0f;
 
+	uORB::Subscription _vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
+
+	/*
 	struct debug_vect_s _debug_vector{};
 	orb_advert_t pub_dbg_vect = orb_advertise(ORB_ID(debug_vect), &_debug_vector);
+	*/
+
+	// Debug array for position observer
+	struct debug_array_s _debug_array{};
+	orb_advert_t pub_dbg_array = orb_advertise(ORB_ID(debug_array), &_debug_array);
 };

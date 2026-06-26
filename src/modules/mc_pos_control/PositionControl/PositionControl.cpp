@@ -163,6 +163,7 @@ bool PositionControl::update(const float dt)
 
 	}
 
+
 	/*
 	strncpy(_debug_vector.name, "_F_hat", 10);
 	_debug_vector.x = _vel(0);
@@ -172,7 +173,8 @@ bool PositionControl::update(const float dt)
 	*/
 
 
-	strncpy(_debug_array.name, "variables", 10);
+
+	strncpy(_debug_array.name, "var_F", 10);
 	_debug_array.data[0] = _v_hat(0);
 	_debug_array.data[1] = _v_hat(1);
 	_debug_array.data[2] = _v_hat(2);
@@ -289,8 +291,8 @@ void PositionControl::_accelerationControl()
 	// compensate the disturbance with the observer after x seconds of takeoff
 
 	if(_tiempo_transcurrido > 10.f){
-		_thr_sp(0) -= 0.005f * _F_hat(0);
-		_thr_sp(1) -= 0.005f * _F_hat(1);
+		//_thr_sp(0) -= 0.005f * _F_hat(0);
+		//_thr_sp(1) -= 0.005f * _F_hat(1);
 	}
 
 }
