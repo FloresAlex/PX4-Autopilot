@@ -240,7 +240,8 @@ MulticopterRateControl::Run()
 			vehicle_torque_setpoint.xyz[2] = PX4_ISFINITE(torque_setpoint(2)) ? torque_setpoint(2) : 0.f;
 
 			////// disturbance compensation //////////
-			//vehicle_torque_setpoint.xyz[0] -= _T_hat(0)*0.12f;
+			vehicle_torque_setpoint.xyz[0] -= _T_hat(0)*0.1f;
+			vehicle_torque_setpoint.xyz[1] -= _T_hat(1)*0.1f;
 
 			// scale setpoints by battery status if enabled
 			if (_param_mc_bat_scale_en.get()) {

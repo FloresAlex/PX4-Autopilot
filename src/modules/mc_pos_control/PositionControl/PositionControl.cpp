@@ -104,8 +104,8 @@ void PositionControl::setInputSetpoint(const trajectory_setpoint_s &setpoint)
 	_pos_sp = Vector3f(setpoint.position);
 	_vel_sp = Vector3f(setpoint.velocity);
 	_acc_sp = Vector3f(setpoint.acceleration);
-	_yaw_sp = 0.f; //setpoint.yaw;
-	_yawspeed_sp = 0.f; //setpoint.yawspeed;
+	_yaw_sp = 0.5f; //setpoint.yaw;
+	_yawspeed_sp = 0.0f; //setpoint.yawspeed;
 }
 
 bool PositionControl::update(const float dt)
@@ -291,8 +291,8 @@ void PositionControl::_accelerationControl()
 	// compensate the disturbance with the observer after x seconds of takeoff
 
 	if(_tiempo_transcurrido > 10.f){
-		//_thr_sp(0) -= 0.005f * _F_hat(0);
-		//_thr_sp(1) -= 0.005f * _F_hat(1);
+		_thr_sp(0) -= 0.005f * _F_hat(0);
+		_thr_sp(1) -= 0.005f * _F_hat(1);
 	}
 
 }
