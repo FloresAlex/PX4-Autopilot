@@ -151,7 +151,7 @@ bool PositionControl::update(const float dt)
 		// In the control term we can put PX4 control equation or ours
 		// The PX4 control law works better for position observer
 		//v_hat_dot = Vector3f(0.0f, 0.0f, CONSTANTS_ONE_G) + _thr_sp/_m + _F_hat - v_tilde.emult(_K_v);
-		v_hat_dot = Vector3f(0.0f, 0.0f, CONSTANTS_ONE_G) + _thr_sp/_m - _v_hat.emult(Vector3f(0.13f, 0.13f, 0.13f)) - v_tilde.emult(_K_v);
+		v_hat_dot = Vector3f(0.0f, 0.0f, CONSTANTS_ONE_G) + _thr_sp/_m - _v_hat.emult(Vector3f(0.013f, 0.013f, 0.013f)) - v_tilde.emult(_K_v);
 		// integration
 		_v_hat += v_hat_dot * dt;
 
@@ -164,13 +164,13 @@ bool PositionControl::update(const float dt)
 	}
 
 
-	/*
+	
 	strncpy(_debug_vector.name, "_F_hat", 10);
 	_debug_vector.x = _vel(0);
-	_debug_vector.y = _F_hat(0);
+	_debug_vector.y = _v_hat(0);
 	_debug_vector.z = _F_hat(1);
 	orb_publish(ORB_ID(debug_vect), pub_dbg_vect, &_debug_vector);
-	*/
+	
 
 
 
@@ -289,11 +289,12 @@ void PositionControl::_accelerationControl()
 
 
 	// compensate the disturbance with the observer after x seconds of takeoff
-
+	
 	if(_tiempo_transcurrido > 10.f){
-		_thr_sp(0) -= 0.005f * _F_hat(0);
-		_thr_sp(1) -= 0.005f * _F_hat(1);
+		_thr_sp(0) -= 0.23f * _F_hat(0);
+		_thr_sp(1) -= 0.23f * _F_hat(1);
 	}
+	
 
 }
 
