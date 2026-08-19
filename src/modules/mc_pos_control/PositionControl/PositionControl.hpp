@@ -242,8 +242,14 @@ private:
 	const matrix::Vector3f _K_p{1.0f, 1.0f, 1.0f};
 	const matrix::Vector3f _K_d{0.1f, 0.1f, 0.1f};
 	const matrix::Vector3f _K_v{30.0f, 30.0f, 30.0f};
-	const matrix::Vector3f _L3{500.0f, 500.0f, 0.0f};
-	const matrix::Vector3f _L4{100.0f, 100.0f, 0.0f};
+	const matrix::Vector3f _L3{15.0f, 15.0f, 0.0f};
+	const matrix::Vector3f _L4{15.0f, 15.0f, 0.0f};
+	float _filtro[10] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+	bool _flag = false;
+	float _suma = 0.0f;
+	float _suma2 = 0.0f;
+	float _filtro2[10] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+	int _contador = 0;
 
 	float _tiempo_transcurrido = 0.f;
 

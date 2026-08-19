@@ -104,7 +104,7 @@ void PositionControl::setInputSetpoint(const trajectory_setpoint_s &setpoint)
 	_pos_sp = Vector3f(setpoint.position);
 	_vel_sp = Vector3f(setpoint.velocity);
 	_acc_sp = Vector3f(setpoint.acceleration);
-	_yaw_sp = 0.5f; //setpoint.yaw;
+	_yaw_sp = 0.1f; //setpoint.yaw;
 	_yawspeed_sp = 0.0f; //setpoint.yawspeed;
 }
 
@@ -146,6 +146,7 @@ bool PositionControl::update(const float dt)
 	if(_pos(2) < -2.0f){
 		_tiempo_transcurrido += dt;
 
+
 		//////////////////////////////
 		// equation 25 ....
 		// In the control term we can put PX4 control equation or ours
@@ -160,15 +161,46 @@ bool PositionControl::update(const float dt)
 		F_hat_dot = -v_tilde.emult(_L3) - _F_hat.emult(_L4);
 		// integration
 		_F_hat += F_hat_dot * dt;
+		
+		
+		if (_flag){
+			_suma += _F_hat(0) - _filtro[_contador];
+			_filtro[_contador] = _F_hat(0);
+			
+			_F_hat(0) = _suma/10.0f;
+			
+			_suma2 += _F_hat(1) - _filtro2[_contador];
+			_filtro2[_contador] = _F_hat(1);
+			
+			_F_hat(1) = _suma2/10.0f;
+			
+			_contador ++;
+			if (_contador == 10){
+				_contador = 0;
+			}
+			
+		}
+		else{
+			_filtro[_contador] = _F_hat(0);
+			_filtro2[_contador] = _F_hat(1);
+			_suma += _F_hat(0);
+			_suma2 += _F_hat(1);
+			_contador++;
+			if (_contador == 9){
+				_flag = true;
+				_contador = 0;
+			}
+		}
+		
 
 	}
 
 
 	
 	strncpy(_debug_vector.name, "_F_hat", 10);
-	_debug_vector.x = _vel(0);
-	_debug_vector.y = _v_hat(0);
-	_debug_vector.z = _F_hat(1);
+	_debug_vector.x = _F_hat(1)*6.0f;
+	_debug_vector.y = _F_hat(0)*6.0f;
+	_debug_vector.z = 0.0f;
 	orb_publish(ORB_ID(debug_vect), pub_dbg_vect, &_debug_vector);
 	
 
@@ -290,9 +322,9 @@ void PositionControl::_accelerationControl()
 
 	// compensate the disturbance with the observer after x seconds of takeoff
 	
-	if(_tiempo_transcurrido > 10.f){
-		_thr_sp(0) -= 0.23f * _F_hat(0);
-		_thr_sp(1) -= 0.23f * _F_hat(1);
+	if(_tiempo_transcurrido > 10.0f){
+		_thr_sp(0) -= 1.8f * _F_hat(0);
+		_thr_sp(1) -= 1.8f * _F_hat(1);
 	}
 	
 
