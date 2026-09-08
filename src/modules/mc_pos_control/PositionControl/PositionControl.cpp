@@ -104,7 +104,7 @@ void PositionControl::setInputSetpoint(const trajectory_setpoint_s &setpoint)
 	_pos_sp = Vector3f(setpoint.position);
 	_vel_sp = Vector3f(setpoint.velocity);
 	_acc_sp = Vector3f(setpoint.acceleration);
-	_yaw_sp = 0.5f; //setpoint.yaw;
+	_yaw_sp = 0.0f; //setpoint.yaw;
 	_yawspeed_sp = 0.0f; //setpoint.yawspeed;
 }
 
@@ -161,16 +161,34 @@ bool PositionControl::update(const float dt)
 		// integration
 		_F_hat += F_hat_dot * dt;
 
+		/*
+		if(_filtro_counter < 20){
+			_filtro(0) += _F_hat(0);
+			_filtro2(0) += _F_hat(1);
+			_filtro_counter++;
+		}else{
+			_filtro(1) = _filtro(0)/20;
+			_filtro(0) -= _filtro(1);
+			_filtro(0) += _F_hat(0);
+			_F_hat(0) = _filtro(1);
+
+			_filtro2(1) = _filtro2(0)/20;
+			_filtro2(0) -= _filtro2(1);
+			_filtro2(0) += _F_hat(1);
+			_F_hat(1) = _filtro2(1);
+		}
+		*/
+
 	}
 
 
-	/*
+
 	strncpy(_debug_vector.name, "_F_hat", 10);
-	_debug_vector.x = _vel(0);
-	_debug_vector.y = _F_hat(0);
-	_debug_vector.z = _F_hat(1);
+	_debug_vector.x = _pos_sp(0);
+	_debug_vector.y = _vel_sp(0);
+	_debug_vector.z = _acc_sp(0);
 	orb_publish(ORB_ID(debug_vect), pub_dbg_vect, &_debug_vector);
-	*/
+
 
 
 
@@ -191,8 +209,12 @@ bool PositionControl::update(const float dt)
 void PositionControl::_positionControl()
 {
 	// P-position controller
+	_pos_sp(0) = 0.0f;
+	_pos_sp(1) = 0.0f;
 	Vector3f vel_sp_position = (_pos_sp - _pos).emult(_gain_pos_p);
 	// Position and feed-forward velocity setpoints or position states being NAN results in them not having an influence
+	_vel_sp(0) = 0.0f;
+	_vel_sp(1) = 0.0f;
 	ControlMath::addIfNotNanVector3f(_vel_sp, vel_sp_position);
 	// make sure there are no NAN elements for further reference while constraining
 	ControlMath::setZeroIfNanVector3f(vel_sp_position);
@@ -214,6 +236,8 @@ void PositionControl::_velocityControl(const float dt)
 	Vector3f acc_sp_velocity = vel_error.emult(_gain_vel_p) + _vel_int - _vel_dot.emult(_gain_vel_d);
 
 	// No control input from setpoints or corresponding states which are NAN
+	_acc_sp(0) = 0.0f;
+	_acc_sp(1) = 0.0f;
 	ControlMath::addIfNotNanVector3f(_acc_sp, acc_sp_velocity);
 
 	_accelerationControl();
@@ -278,6 +302,14 @@ void PositionControl::_accelerationControl()
 		z_specific_force += _acc_sp(2);
 	}
 
+	// compensate the disturbance with the observer after x seconds of takeoff
+
+	if(_tiempo_transcurrido > 50.f){
+		_acc_sp(0) -= 0.0f; //25.0f * _F_hat(0);
+		//_acc_sp(1) -= 15.0f * _F_hat(1);
+	}
+
+
 	Vector3f body_z = Vector3f(-_acc_sp(0), -_acc_sp(1), -z_specific_force).normalized();
 	ControlMath::limitTilt(body_z, Vector3f(0, 0, 1), _lim_tilt);
 	// Convert to thrust assuming hover thrust produces standard gravity
@@ -288,12 +320,11 @@ void PositionControl::_accelerationControl()
 	_thr_sp = body_z * collective_thrust;
 
 
-	// compensate the disturbance with the observer after x seconds of takeoff
 
-	if(_tiempo_transcurrido > 10.f){
-		_thr_sp(0) -= 0.005f * _F_hat(0);
-		_thr_sp(1) -= 0.005f * _F_hat(1);
-	}
+
+
+
+
 
 }
 
