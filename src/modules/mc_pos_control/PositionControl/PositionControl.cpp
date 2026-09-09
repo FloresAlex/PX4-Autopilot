@@ -319,8 +319,8 @@ void PositionControl::_accelerationControl()
 	// compensate the disturbance with the observer after x seconds of takeoff
 
 	if(_tiempo_transcurrido > 30.f){
-		_acc_sp(0) -= 35.0f * _F_hat(0);
-		_acc_sp(1) -= 35.0f * _F_hat(1);
+		_acc_sp(0) -= 25.0f * _F_hat(0);
+		_acc_sp(1) -= 25.0f * _F_hat(1);
 	}
 
 
