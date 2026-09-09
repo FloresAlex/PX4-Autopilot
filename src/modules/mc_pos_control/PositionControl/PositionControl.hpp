@@ -241,41 +241,25 @@ private:
 	const float _m = 0.1f;
 	const matrix::Vector3f _K_p{1.0f, 1.0f, 1.0f};
 	const matrix::Vector3f _K_d{0.1f, 0.1f, 0.1f};
-<<<<<<< HEAD
-	const matrix::Vector3f _K_v{30.0f, 30.0f, 30.0f};
-	const matrix::Vector3f _L3{15.0f, 15.0f, 0.0f};
-	const matrix::Vector3f _L4{15.0f, 15.0f, 0.0f};
+	const matrix::Vector3f _K_v{40.0f, 40.0f, 40.0f};
+	const matrix::Vector3f _L3{20.0f, 20.0f, 0.0f};
+	const matrix::Vector3f _L4{10.0f, 10.0f, 0.0f};
 	float _filtro[10] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
 	bool _flag = false;
 	float _suma = 0.0f;
 	float _suma2 = 0.0f;
 	float _filtro2[10] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
 	int _contador = 0;
-=======
-	const matrix::Vector3f _K_v{40.0f, 40.0f, 40.0f};
-	const matrix::Vector3f _L3{20.0f, 20.0f, 0.0f};
-	const matrix::Vector3f _L4{10.0f, 10.0f, 0.0f};
->>>>>>> 6214fef120ac9fbc6df0c17e708a6384b3be2606
 
 	float _tiempo_transcurrido = 0.f;
 
 	matrix::Vector3f _v_hat{0.0f, 0.0f, 0.0f};
 	matrix::Vector3f _F_hat{0.0f, 0.0f, 0.0f};
-	matrix::Vector2f _filtro{0.f, 0.f};
-	matrix::Vector2f _filtro2{0.f, 0.f};
-	uint8_t _filtro_counter = 0;
 
 
-<<<<<<< HEAD
-	
-	struct debug_vect_s _debug_vector{};
-	orb_advert_t pub_dbg_vect = orb_advertise(ORB_ID(debug_vect), &_debug_vector);
-	
-=======
 	struct debug_vect_s _debug_vector{};
 	orb_advert_t pub_dbg_vect = orb_advertise(ORB_ID(debug_vect), &_debug_vector);
 
->>>>>>> 6214fef120ac9fbc6df0c17e708a6384b3be2606
 
 	// Debug array for position observer
 	struct debug_array_s _debug_array{};

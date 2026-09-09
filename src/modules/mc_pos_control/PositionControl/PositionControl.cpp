@@ -104,11 +104,7 @@ void PositionControl::setInputSetpoint(const trajectory_setpoint_s &setpoint)
 	_pos_sp = Vector3f(setpoint.position);
 	_vel_sp = Vector3f(setpoint.velocity);
 	_acc_sp = Vector3f(setpoint.acceleration);
-<<<<<<< HEAD
-	_yaw_sp = 0.1f; //setpoint.yaw;
-=======
 	_yaw_sp = 0.0f; //setpoint.yaw;
->>>>>>> 6214fef120ac9fbc6df0c17e708a6384b3be2606
 	_yawspeed_sp = 0.0f; //setpoint.yawspeed;
 }
 
@@ -165,24 +161,25 @@ bool PositionControl::update(const float dt)
 		F_hat_dot = -v_tilde.emult(_L3) - _F_hat.emult(_L4);
 		// integration
 		_F_hat += F_hat_dot * dt;
-		
-		
+
+
+
 		if (_flag){
 			_suma += _F_hat(0) - _filtro[_contador];
 			_filtro[_contador] = _F_hat(0);
-			
+
 			_F_hat(0) = _suma/10.0f;
-			
+
 			_suma2 += _F_hat(1) - _filtro2[_contador];
 			_filtro2[_contador] = _F_hat(1);
-			
+
 			_F_hat(1) = _suma2/10.0f;
-			
+
 			_contador ++;
 			if (_contador == 10){
 				_contador = 0;
 			}
-			
+
 		}
 		else{
 			_filtro[_contador] = _F_hat(0);
@@ -195,48 +192,17 @@ bool PositionControl::update(const float dt)
 				_contador = 0;
 			}
 		}
-		
 
-		/*
-		if(_filtro_counter < 20){
-			_filtro(0) += _F_hat(0);
-			_filtro2(0) += _F_hat(1);
-			_filtro_counter++;
-		}else{
-			_filtro(1) = _filtro(0)/20;
-			_filtro(0) -= _filtro(1);
-			_filtro(0) += _F_hat(0);
-			_F_hat(0) = _filtro(1);
-
-			_filtro2(1) = _filtro2(0)/20;
-			_filtro2(0) -= _filtro2(1);
-			_filtro2(0) += _F_hat(1);
-			_F_hat(1) = _filtro2(1);
-		}
-		*/
 
 	}
 
 
-<<<<<<< HEAD
-	
-	strncpy(_debug_vector.name, "_F_hat", 10);
-	_debug_vector.x = _F_hat(1)*6.0f;
-	_debug_vector.y = _F_hat(0)*6.0f;
-	_debug_vector.z = 0.0f;
-	orb_publish(ORB_ID(debug_vect), pub_dbg_vect, &_debug_vector);
-	
-=======
 
 	strncpy(_debug_vector.name, "_F_hat", 10);
-	_debug_vector.x = _pos_sp(0);
-	_debug_vector.y = _vel_sp(0);
-	_debug_vector.z = _acc_sp(0);
+	_debug_vector.x = _tiempo_transcurrido;
+	_debug_vector.y = _vel_int(0);
+	_debug_vector.z = 10.0f *_F_hat(0);
 	orb_publish(ORB_ID(debug_vect), pub_dbg_vect, &_debug_vector);
-
->>>>>>> 6214fef120ac9fbc6df0c17e708a6384b3be2606
-
-
 
 	strncpy(_debug_array.name, "var_F", 10);
 	_debug_array.data[0] = _v_hat(0);
@@ -336,6 +302,8 @@ void PositionControl::_velocityControl(const float dt)
 	ControlMath::setZeroIfNanVector3f(vel_error);
 	// Update integral part of velocity control
 	_vel_int += vel_error.emult(_gain_vel_i) * dt;
+	///////////////////////////////////////////////////
+	//_vel_int = math::constrain(_vel_int, -_lim_vel_up, _lim_vel_down);
 }
 
 void PositionControl::_accelerationControl()
@@ -350,10 +318,11 @@ void PositionControl::_accelerationControl()
 
 	// compensate the disturbance with the observer after x seconds of takeoff
 
-	if(_tiempo_transcurrido > 50.f){
-		_acc_sp(0) -= 0.0f; //25.0f * _F_hat(0);
-		//_acc_sp(1) -= 15.0f * _F_hat(1);
+	if(_tiempo_transcurrido > 30.f){
+		_acc_sp(0) -= 35.0f * _F_hat(0);
+		_acc_sp(1) -= 35.0f * _F_hat(1);
 	}
+
 
 
 	Vector3f body_z = Vector3f(-_acc_sp(0), -_acc_sp(1), -z_specific_force).normalized();
@@ -364,23 +333,6 @@ void PositionControl::_accelerationControl()
 	const float cos_ned_body = (Vector3f(0, 0, 1).dot(body_z));
 	const float collective_thrust = math::min(thrust_ned_z / cos_ned_body, -_lim_thr_min);
 	_thr_sp = body_z * collective_thrust;
-
-
-<<<<<<< HEAD
-	// compensate the disturbance with the observer after x seconds of takeoff
-	
-	if(_tiempo_transcurrido > 10.0f){
-		_thr_sp(0) -= 1.8f * _F_hat(0);
-		_thr_sp(1) -= 1.8f * _F_hat(1);
-	}
-	
-=======
-
-
-
-
-
->>>>>>> 6214fef120ac9fbc6df0c17e708a6384b3be2606
 
 }
 
