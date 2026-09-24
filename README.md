@@ -1,5 +1,5 @@
 ## States and Disturbance Observers Branch
-In this branch ...
+In this branch, modifications to the PositionControl.cpp and PositionControl.hpp files were performed to implement a position state observer and an external disturbance estimator to compensate for it. 
 
 <p align="center">
   <a href="https://px4.io">
